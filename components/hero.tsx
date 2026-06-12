@@ -3,11 +3,13 @@
 import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { PenLine, MapPin } from "lucide-react"
+import { PenLine, User } from "lucide-react"
+
+type Entry = { text: string; time: string }
 
 export function Hero() {
   const [selected, setSelected] = useState<"started" | "learn" | null>(null)
-  const [entries, setEntries] = useState<string[]>([])
+  const [entries, setEntries] = useState<Entry[]>([])
 
   function handleInput(e: React.FormEvent<HTMLTextAreaElement>) {
     const el = e.currentTarget
@@ -21,7 +23,8 @@ export function Hero() {
       const el = e.currentTarget
       const firstLine = el.value.split("\n")[0].trim()
       if (firstLine) {
-        setEntries((prev) => [firstLine, ...prev])
+        const time = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+        setEntries((prev) => [{ text: firstLine, time }, ...prev])
       }
       el.value = ""
       el.style.height = "auto"
@@ -36,6 +39,7 @@ export function Hero() {
           size="lg"
           variant={selected === "started" ? "default" : "outline"}
           onClick={() => setSelected("started")}
+          className="hover:bg-primary hover:text-primary-foreground"
         >
           Get started
         </Button>
@@ -43,6 +47,7 @@ export function Hero() {
           size="lg"
           variant={selected === "learn" ? "default" : "outline"}
           onClick={() => setSelected("learn")}
+          className="hover:bg-primary hover:text-primary-foreground"
         >
           Learn more
         </Button>
@@ -55,13 +60,13 @@ export function Hero() {
       </p>
       <div className="flex w-full max-w-xl flex-col gap-3">
         {entries.length > 0 && (
-          <ul className="flex max-h-[7.5rem] flex-col gap-1 overflow-y-auto pr-1 text-left">
+          <ul className="flex max-h-[4rem] flex-col gap-1 overflow-y-auto pr-1 text-left [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {entries.map((entry, i) => (
               <li key={i} className="flex items-center gap-4 px-1 py-2">
-                <MapPin className="h-6 w-6 shrink-0 text-primary" aria-hidden="true" />
+                <User className="h-6 w-6 shrink-0 text-primary" aria-hidden="true" />
                 <div className="min-w-0">
-                  <p className="truncate text-base font-semibold text-foreground">{entry}</p>
-                  <p className="truncate text-sm text-muted-foreground">Recent destination</p>
+                  <p className="truncate text-base font-semibold text-foreground">{entry.text}</p>
+                  <p className="truncate text-sm text-muted-foreground">{entry.time}</p>
                 </div>
               </li>
             ))}
