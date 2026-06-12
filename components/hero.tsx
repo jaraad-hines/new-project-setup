@@ -1,20 +1,34 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { PenLine, User } from "lucide-react"
+import { PenLine, User, Plus, Trash2 } from "lucide-react"
 
 type Entry = { text: string; time: string }
 
 export function Hero() {
   const [selected, setSelected] = useState<"started" | "learn" | null>(null)
   const [entries, setEntries] = useState<Entry[]>([])
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   function handleInput(e: React.FormEvent<HTMLTextAreaElement>) {
     const el = e.currentTarget
     el.style.height = "auto"
     el.style.height = `${el.scrollHeight}px`
+  }
+
+  function addToSearch(text: string) {
+    const el = textareaRef.current
+    if (!el) return
+    el.value = text
+    el.style.height = "auto"
+    el.style.height = `${el.scrollHeight}px`
+    el.focus()
+  }
+
+  function removeEntry(index: number) {
+    setEntries((prev) => prev.filter((_, i) => i !== index))
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -64,10 +78,26 @@ export function Hero() {
             {entries.map((entry, i) => (
               <li key={i} className="flex items-center gap-4 px-1 py-2">
                 <User className="h-6 w-6 shrink-0 text-primary" aria-hidden="true" />
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="truncate text-base font-semibold text-foreground">{entry.text}</p>
                   <p className="truncate text-sm text-muted-foreground">{entry.time}</p>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => addToSearch(entry.text)}
+                  aria-label="Add to search"
+                  className="shrink-0 rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  <Plus className="h-5 w-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeEntry(i)}
+                  aria-label="Delete entry"
+                  className="shrink-0 rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
+                >
+                  <Trash2 className="h-5 w-5" />
+                </button>
               </li>
             ))}
           </ul>
@@ -75,6 +105,7 @@ export function Hero() {
         <div className="flex w-full items-start gap-3 rounded-2xl border-2 border-primary bg-card px-5 py-4 shadow-[0_0_20px_-4px_var(--color-primary)]">
           <PenLine className="mt-1 h-6 w-6 shrink-0 text-primary" aria-hidden="true" />
           <textarea
+            ref={textareaRef}
             rows={1}
             placeholder="Where are you going?"
             aria-label="Search"
