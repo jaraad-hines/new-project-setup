@@ -3,10 +3,10 @@
 import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { PenLine } from "lucide-react"
+import { PenLine, MapPin } from "lucide-react"
 
 export function Hero() {
-  const [selected, setSelected] = useState<"started" | "learn">("started")
+  const [selected, setSelected] = useState<"started" | "learn" | null>(null)
   const [entries, setEntries] = useState<string[]>([])
 
   function handleInput(e: React.FormEvent<HTMLTextAreaElement>) {
@@ -55,13 +55,14 @@ export function Hero() {
       </p>
       <div className="flex w-full max-w-xl flex-col gap-3">
         {entries.length > 0 && (
-          <ul className="flex max-h-32 flex-col gap-2 overflow-y-auto pr-1 text-left">
+          <ul className="flex max-h-[7.5rem] flex-col gap-1 overflow-y-auto pr-1 text-left">
             {entries.map((entry, i) => (
-              <li
-                key={i}
-                className="truncate rounded-xl border border-border bg-card px-4 py-3 text-base text-foreground"
-              >
-                {entry}
+              <li key={i} className="flex items-center gap-4 px-1 py-2">
+                <MapPin className="h-6 w-6 shrink-0 text-primary" aria-hidden="true" />
+                <div className="min-w-0">
+                  <p className="truncate text-base font-semibold text-foreground">{entry}</p>
+                  <p className="truncate text-sm text-muted-foreground">Recent destination</p>
+                </div>
               </li>
             ))}
           </ul>
