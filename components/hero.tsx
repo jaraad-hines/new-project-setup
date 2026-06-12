@@ -3,14 +3,19 @@
 import type React from "react"
 import { useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { PenLine, User, Plus, Trash2 } from "lucide-react"
+import { PenLine, User, Pen, Trash2 } from "lucide-react"
+import { ProfileView } from "@/components/profile-view"
 
-type Entry = { text: string; time: string }
+type Entry = { text: string; time: string; inProfile: boolean }
 
 export function Hero() {
   const [selected, setSelected] = useState<"started" | "learn" | null>(null)
   const [entries, setEntries] = useState<Entry[]>([])
+  const [pendingIndex, setPendingIndex] = useState<number | null>(null)
+  const [view, setView] = useState<"home" | "profile">("home")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const anyInProfile = entries.some((e) => e.inProfile)
 
   function handleInput(e: React.FormEvent<HTMLTextAreaElement>) {
     const el = e.currentTarget
@@ -18,17 +23,14 @@ export function Hero() {
     el.style.height = `${el.scrollHeight}px`
   }
 
-  function addToSearch(text: string) {
-    const el = textareaRef.current
-    if (!el) return
-    el.value = text
-    el.style.height = "auto"
-    el.style.height = `${el.scrollHeight}px`
-    el.focus()
+  function confirmAddToProfile(index: number) {
+    setEntries((prev) => prev.map((entry, i) => (i === index ? { ...entry, inProfile: true } : entry)))
+    setPendingIndex(null)
   }
 
   function removeEntry(index: number) {
     setEntries((prev) => prev.filter((_, i) => i !== index))
+    setPendingIndex(null)
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -38,7 +40,7 @@ export function Hero() {
       const firstLine = el.value.split("\n")[0].trim()
       if (firstLine) {
         const time = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
-        setEntries((prev) => [{ text: firstLine, time }, ...prev])
+        setEntries((prev) => [{ text: firstLine, time, inProfile: false }, ...prev])
       }
       el.value = ""
       el.style.height = "auto"
@@ -69,52 +71,96 @@ export function Hero() {
       <h1 className="max-w-3xl text-balance text-4xl font-bold tracking-tight text-foreground md:text-6xl">
         Build something great, starting right here
       </h1>
-      <p className="max-w-xl text-pretty text-lg leading-relaxed text-muted-foreground">
-        Create a profile from your ideas
-      </p>
-      <div className="flex w-full max-w-xl flex-col gap-3">
-        {entries.length > 0 && (
-          <ul className="flex max-h-[4rem] flex-col gap-1 overflow-y-auto pr-1 text-left [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {entries.map((entry, i) => (
-              <li key={i} className="flex items-center gap-4 px-1 py-2">
-                <User className="h-6 w-6 shrink-0 text-primary" aria-hidden="true" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-base font-semibold text-foreground">{entry.text}</p>
-                  <p className="truncate text-sm text-muted-foreground">{entry.time}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => addToSearch(entry.text)}
-                  aria-label="Add to search"
-                  className="shrink-0 rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+
+      {view === "profile" ? (
+        <p className="text-pretty text-lg font-semibold leading-relaxed text-foreground">Your Profile</p>
+      ) : anyInProfile ? (
+        <button
+          type="button"
+          onClick={() => setView("profile")}
+          className="rounded-md text-pretty text-lg font-semibold leading-relaxed text-primary transition-all [text-shadow:0_0_12px_var(--color-primary)] hover:[text-shadow:0_0_20px_var(--color-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          Visit Your Profile
+        </button>
+      ) : (
+        <p className="max-w-xl text-pretty text-lg leading-relaxed text-muted-foreground">
+          Create a profile from your ideas
+        </p>
+      )}
+
+      {view === "profile" ? (
+        <ProfileView entries={entries.filter((e) => e.inProfile)} />
+      ) : (
+        <div className="flex w-full max-w-xl flex-col gap-3">
+          {entries.length > 0 && (
+            <ul className="flex max-h-[4rem] flex-col gap-1 overflow-y-auto pr-1 text-left [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {entries.map((entry, i) => (
+                <li
+                  key={i}
+                  className={`flex items-center gap-4 rounded-xl px-3 py-2 transition-colors ${
+                    entry.inProfile ? "bg-primary/15 ring-1 ring-primary" : ""
+                  }`}
                 >
-                  <Plus className="h-5 w-5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => removeEntry(i)}
-                  aria-label="Delete entry"
-                  className="shrink-0 rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
-                >
-                  <Trash2 className="h-5 w-5" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        <div className="flex w-full items-start gap-3 rounded-2xl border-2 border-primary bg-card px-5 py-4 shadow-[0_0_20px_-4px_var(--color-primary)]">
-          <PenLine className="mt-1 h-6 w-6 shrink-0 text-primary" aria-hidden="true" />
-          <textarea
-            ref={textareaRef}
-            rows={1}
-            placeholder="Where are you going?"
-            aria-label="Search"
-            onInput={handleInput}
-            onKeyDown={handleKeyDown}
-            className="w-full resize-none overflow-hidden break-words bg-transparent text-lg text-foreground placeholder:text-muted-foreground focus:outline-none"
-          />
+                  <button
+                    type="button"
+                    onClick={() => setPendingIndex(pendingIndex === i ? null : i)}
+                    aria-label="Add to profile"
+                    className="shrink-0 rounded-full transition-all hover:[filter:drop-shadow(0_0_8px_var(--color-primary))] focus:outline-none"
+                  >
+                    <User className="h-6 w-6 text-primary" aria-hidden="true" />
+                  </button>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-base font-semibold text-foreground">{entry.text}</p>
+                    <p className="truncate text-sm text-muted-foreground">{entry.time}</p>
+                  </div>
+                  {pendingIndex === i ? (
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="text-sm text-muted-foreground">Add to profile?</span>
+                      <Button size="sm" onClick={() => confirmAddToProfile(i)}>
+                        Confirm
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setPendingIndex(null)}>
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setPendingIndex(i)}
+                        aria-label="Add to profile"
+                        className="shrink-0 rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      >
+                        <Pen className="h-5 w-5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeEntry(i)}
+                        aria-label="Delete entry"
+                        className="shrink-0 rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="flex w-full items-start gap-3 rounded-2xl border-2 border-primary bg-card px-5 py-4 shadow-[0_0_20px_-4px_var(--color-primary)]">
+            <PenLine className="mt-1 h-6 w-6 shrink-0 text-primary" aria-hidden="true" />
+            <textarea
+              ref={textareaRef}
+              rows={1}
+              placeholder="Where are you going?"
+              aria-label="Search"
+              onInput={handleInput}
+              onKeyDown={handleKeyDown}
+              className="w-full resize-none overflow-hidden break-words bg-transparent text-lg text-foreground placeholder:text-muted-foreground focus:outline-none"
+            />
+          </div>
         </div>
-      </div>
+      )}
     </section>
   )
 }
