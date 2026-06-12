@@ -3,7 +3,7 @@
 import type React from "react"
 import { useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { PenLine, User, Pen, Trash2 } from "lucide-react"
+import { PenLine, User, Pen, Trash2, ArrowLeft } from "lucide-react"
 import { ProfileView } from "@/components/profile-view"
 
 type Entry = { text: string; time: string; inProfile: boolean }
@@ -33,6 +33,13 @@ export function Hero() {
     setPendingIndex(null)
   }
 
+  function resetFlow() {
+    setEntries([])
+    setPendingIndex(null)
+    setSelected(null)
+    setView("home")
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
@@ -48,7 +55,18 @@ export function Hero() {
   }
 
   return (
-    <section className="flex min-h-[80vh] flex-col items-center justify-center gap-6 px-6 py-24 text-center">
+    <section className="relative flex min-h-[80vh] flex-col items-center justify-center gap-6 px-6 py-24 text-center">
+      {view === "profile" && (
+        <button
+          type="button"
+          onClick={resetFlow}
+          aria-label="Start over"
+          className="absolute left-6 top-6 flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          Start over
+        </button>
+      )}
       <span className="text-2xl font-extrabold tracking-tight text-foreground">OFF</span>
       <div className="flex flex-col items-center gap-3 sm:flex-row">
         <Button
